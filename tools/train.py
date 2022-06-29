@@ -158,8 +158,8 @@ def main():
         if os.path.exists(cfg.work_dir + '/config'):
             shutil.rmtree(cfg.work_dir + '/config')
 
-        shutil.copytree('./mmdet', cfg.work_dir + '/mmdet')
-        shutil.copytree('./configs', cfg.work_dir + '/config')
+        # shutil.copytree('./mmdet', cfg.work_dir + '/mmdet')
+        # shutil.copytree('./configs', cfg.work_dir + '/config')
 
     # set random seeds
     if args.seed is not None:
