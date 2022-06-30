@@ -157,12 +157,15 @@ class AdaMixerDecoder(CascadeRoIHead):
             query_xyzr = bbox_results['query_xyzr'].detach()
             query_content = bbox_results['query_content']
 
-            if self.stage_loss_weights[stage] <= 0:
-                continue
-
-            # for i in range(num_imgs):
-                # normalize_bbox_ccwh = bbox_xyxy_to_cxcywh(bboxes_list[i] /
-                                                          # imgs_whwh[i])
+            # if self.stage_loss_weights[stage] <= 0:
+                # continue
+            cls_score, bbox_pred = [], []          
+            for i in range(num_imgs):
+                cls_score.append(bbox_results['cls_score'][i])
+                norm_bbox = bbox_xyxy_to_cxcywh(bbox_results['decode_bbox_pred'][i] / imgs_whwh[i])
+                bbox_pred.append(norm_bbox)
+            all_cls_score.append(torch.stack(cls_score))
+            all_bbox_pred.append(torch.stack(bbox_pred))
                 # assign_result = self.bbox_assigner[stage].assign(
                     # normalize_bbox_ccwh, cls_pred_list[i], gt_bboxes[i],
                     # gt_labels[i], img_metas[i])
@@ -173,10 +176,8 @@ class AdaMixerDecoder(CascadeRoIHead):
                 # sampling_results, gt_bboxes, gt_labels, self.train_cfg[stage],
                 # True)
 
-            cls_score = bbox_results['cls_score']
-            decode_bbox_pred = bbox_results['decode_bbox_pred']
-            all_cls_score.append(cls_score)
-            all_bbox_pred.append(decode_bbox_pred)
+            # cls_score = bbox_results['cls_score']
+            # decode_bbox_pred = bbox_results['decode_bbox_pred']
 
             # single_stage_loss = self.bbox_head[stage].loss(
                 # cls_score.view(-1, cls_score.size(-1)),
@@ -188,7 +189,7 @@ class AdaMixerDecoder(CascadeRoIHead):
                     # self.stage_loss_weights[stage]
         all_cls_score = torch.stack(all_cls_score)
         all_bbox_pred = torch.stack(all_bbox_pred)
-        all_bbox_pred = (all_bbox_pred / all_bbox_pred.max()).sigmoid()
+        # all_bbox_pred = (all_bbox_pred / all_bbox_pred.max()).sigmoid()
         loss_val = self.loss([all_cls_score], [all_bbox_pred], gt_bboxes, gt_labels, img_metas)
         return loss_val
     
