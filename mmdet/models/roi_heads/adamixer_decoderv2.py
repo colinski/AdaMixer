@@ -58,15 +58,14 @@ class AdaMixerDecoder(CascadeRoIHead):
             for stage in range(num_stages):
                 assert isinstance(self.bbox_sampler[stage], PseudoSampler)
 
+        
+        #mostly copied from DETR head
         self.assigner = build_assigner(assigner)
         sampler_cfg = dict(type='PseudoSampler')
         self.sampler = build_sampler(sampler_cfg, context=self)
         self.num_classes = 80
         self.cls_out_channels = self.num_classes + 1
-        # self.bg_cls_weight = 0.1
         self.sync_cls_avg_factor = False
-
-
         class_weight = loss_cls.get('class_weight', None)
         if class_weight is not None:
             assert isinstance(class_weight, float), 'Expected ' \
@@ -157,8 +156,6 @@ class AdaMixerDecoder(CascadeRoIHead):
             query_xyzr = bbox_results['query_xyzr'].detach()
             query_content = bbox_results['query_content']
 
-            # if self.stage_loss_weights[stage] <= 0:
-                # continue
             cls_score, bbox_pred = [], []          
             for i in range(num_imgs):
                 cls_score.append(bbox_results['cls_score'][i])
@@ -166,34 +163,13 @@ class AdaMixerDecoder(CascadeRoIHead):
                 bbox_pred.append(norm_bbox)
             all_cls_score.append(torch.stack(cls_score))
             all_bbox_pred.append(torch.stack(bbox_pred))
-                # assign_result = self.bbox_assigner[stage].assign(
-                    # normalize_bbox_ccwh, cls_pred_list[i], gt_bboxes[i],
-                    # gt_labels[i], img_metas[i])
-                # sampling_result = self.bbox_sampler[stage].sample(
-                    # assign_result, bboxes_list[i], gt_bboxes[i])
-                # sampling_results.append(sampling_result)
-            # bbox_targets = self.bbox_head[stage].get_targets(
-                # sampling_results, gt_bboxes, gt_labels, self.train_cfg[stage],
-                # True)
-
-            # cls_score = bbox_results['cls_score']
-            # decode_bbox_pred = bbox_results['decode_bbox_pred']
-
-            # single_stage_loss = self.bbox_head[stage].loss(
-                # cls_score.view(-1, cls_score.size(-1)),
-                # decode_bbox_pred.view(-1, 4),
-                # *bbox_targets,
-                # imgs_whwh=imgs_whwh)
-            # for key, value in single_stage_loss.items():
-                # all_stage_loss[f'stage{stage}_{key}'] = value * \
-                    # self.stage_loss_weights[stage]
         all_cls_score = torch.stack(all_cls_score)
         all_bbox_pred = torch.stack(all_bbox_pred)
-        # all_bbox_pred = (all_bbox_pred / all_bbox_pred.max()).sigmoid()
         loss_val = self.loss([all_cls_score], [all_bbox_pred], gt_bboxes, gt_labels, img_metas)
         return loss_val
     
     # @force_fp32(apply_to=('all_cls_scores_list', 'all_bbox_preds_list'))
+    #mostly copied from DETR head
     def loss(self,
              all_cls_scores_list,
              all_bbox_preds_list,
@@ -260,6 +236,7 @@ class AdaMixerDecoder(CascadeRoIHead):
             num_dec_layer += 1
         return loss_dict
 
+    #mostly copied from DETR head
     def loss_single(self,
                     cls_scores,
                     bbox_preds,
@@ -346,6 +323,7 @@ class AdaMixerDecoder(CascadeRoIHead):
             bbox_preds, bbox_targets, bbox_weights, avg_factor=num_total_pos)
         return loss_cls, loss_bbox, loss_iou
 
+    #mostly copied from DETR head
     def get_targets(self,
                     cls_scores_list,
                     bbox_preds_list,
