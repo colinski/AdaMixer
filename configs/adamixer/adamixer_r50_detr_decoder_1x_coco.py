@@ -83,10 +83,13 @@ out_patterns_list = [128, ] * num_stages
 # G for the mixer grouping in the paper. Please distinguishe it from num_heads in MHSA in this codebase.
 n_group_list = [4, ] * num_stages
 
+checkpoint = 'checkpoints/adamixer_r50_detr_1x_coco_200_no_decoder.pth'
+
 model = dict(
     type='QueryBased',
-    pretrained='torchvision://resnet50',
-    freeze_bakcbone=True,
+    #pretrained='torchvision://resnet50',
+    init_cfg=dict(type='Pretrained', checkpoint=checkpoint),
+    freeze_backbone=True,
     backbone=dict(
         type='ResNet',
         depth=50,
